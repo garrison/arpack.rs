@@ -1,0 +1,9 @@
+[package]
+
+name = "arpack.rs"
+version = "0.1.0-git"
+authors = ["Jim Garrison <jim@garrison.cc>"]
+
+[[lib]]
+
+name = "arpack"
