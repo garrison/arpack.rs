@@ -1,5 +1,6 @@
 extern crate libc;
 extern crate num;
+extern crate test;
 
 use libc::{c_char, c_double, c_float, c_int};
 use num::complex::Complex;
@@ -27,7 +28,7 @@ extern {
                info: *mut c_int);
 
     fn sseupd_(rvec: *const c_int,
-               All: *const c_char,
+               howmny: *const c_char,
                select: *mut c_int,
                d: *mut c_float,
                z: *mut c_float,
@@ -69,7 +70,7 @@ extern {
                info: *mut c_int);
 
     fn dseupd_(rvec: *const c_int,
-               All: *const c_char,
+               howmny: *const c_char,
                select: *mut c_int,
                d: *mut c_double,
                z: *mut c_double,
@@ -122,7 +123,7 @@ extern {
                info: *mut c_int);
 
     fn cneupd_(rvec: *const c_int,
-               All: *const c_char,
+               howmny: *const c_char,
                select: *mut c_int,
                d: *mut Complex<c_float>,
                v: *mut Complex<c_float>,
@@ -167,7 +168,7 @@ extern {
                info: *mut c_int);
 
     fn zneupd_(rvec: *const c_int,
-               All: *const c_char,
+               howmny: *const c_char,
                select: *mut c_int,
                d: *mut Complex<c_double>,
                v: *mut Complex<c_double>,
@@ -190,5 +191,153 @@ extern {
                lworkl: *const c_int,
                rwork: *mut c_double,
                ierr: *mut c_int);
+
+}
+
+enum Which {
+    LM,
+    SM,
+    LA,
+    SA,
+    BE,
+}
+
+enum BMat {
+    I,
+    G,
+}
+
+fn which_func(which: Which) -> &'static str {
+    match which {
+        LM => "LM",
+        SM => "SM",
+        LA => "LA",
+        SA => "SA",
+        BE => "BE",
+    }
+}
+
+fn bmat_func(bmat: BMat) -> &'static str {
+    match bmat {
+        I => "I",
+        G => "G",
+    }
+}
+
+// note: evals may potentially be modified even if there is an error.
+fn dsaupd(n: c_int,
+          nev: c_int,
+          mv_multiply: |slice: &[c_double]| -> Vec<c_double>,
+          evals: &mut Vec<c_double>,
+          evecs: Option<&mut Vec<c_double>>) {
+    assert!(nev > 0);
+    assert!(nev < n);
+
+    let mut ido: c_int = 0;
+    let bmat = bmat_func(I).to_c_str();
+    let which = which_func(SA).to_c_str();
+    let tol: c_double = 0.0;
+    let mut resid = Vec::from_elem(n as uint, 0.0 as c_double);
+    let ncv = {
+        let possible_ncv: c_int = 4 * nev;
+        if possible_ncv > n {
+            n
+        } else {
+            possible_ncv
+        }
+    };
+    let ldv: c_int = n;
+    let mut v = Vec::from_elem((ldv * ncv) as uint, 0.0 as c_double);
+    let mut iparam = vec![1 as c_int, 0, 3 * n, 0, 0, 0, 1, 0, 0, 0, 0];
+    // fixme: may wish to tune iparam[2] differently.
+    let mut ipntr = Vec::from_elem(11, 0 as c_int);
+    let mut workd = Vec::from_elem(3 * n as uint, 0.0 as c_double);
+    let lworkl: c_int = ncv * (ncv + 8);
+    let mut workl = Vec::from_elem(lworkl as uint, 0.0 as c_double);
+    let mut info: c_int = 0;
+
+    loop {
+        unsafe {
+            dsaupd_(&mut ido, bmat.as_ptr(), &n, which.as_ptr(), &nev, &tol,
+                    resid.as_mut_ptr(), &ncv, v.as_mut_ptr(), &ldv,
+                    iparam.as_mut_ptr(), ipntr.as_mut_ptr(), workd.as_mut_ptr(),
+                    workl.as_mut_ptr(), &lworkl, &mut info);
+        }
+
+        if ido != 1 && ido != -1 {
+            break;
+        }
+
+        // fixme: seems overkill
+        let output = {
+            let in_slice = workd.slice((ipntr[0] - 1) as uint,
+                                       (ipntr[0] - 1 + n) as uint);
+            mv_multiply(in_slice)
+        };
+        let out_slice = workd.mut_slice((ipntr[1] - 1) as uint,
+                                        (ipntr[1] - 1 + n) as uint);
+        out_slice.copy_from(output.as_slice());
+    }
+
+    if info < 0 {
+        // fixme: return error using enum
+        return;
+    }
+
+    let rvec: c_int = match evecs {
+        Some(ref evecs) => 1,
+        None => 0
+    };
+    let mut select = Vec::from_elem(ncv as uint, 0 as c_int);
+    evals.clear(); // called ``d`` in arpack
+    evals.grow(nev as uint, &0.0);
+    let sigma: c_double = 0.0;
+    let mut ierr: c_int = 0;
+
+    let howmny = "A".to_c_str();
+    unsafe {
+        dseupd_(&rvec, howmny.as_ptr(), select.as_mut_ptr(), evals.as_mut_ptr(),
+                v.as_mut_ptr(), &ldv, &sigma, bmat.as_ptr(),
+	        &n, which.as_ptr(), &nev, &tol, resid.as_mut_ptr(), &ncv, v.as_mut_ptr(), &ldv,
+	        iparam.as_mut_ptr(), ipntr.as_mut_ptr(), workd.as_mut_ptr(), workl.as_mut_ptr(), &lworkl, &mut ierr);
+    }
+
+    if ierr != 0 {
+        // fixme: return error code
+        return;
+    }
+
+    match evecs {
+        Some(evecs) => {
+            // copy the vector.  fixme: seems overkill.
+            evecs.clear();
+            evecs.grow((nev * n) as uint, &0.0);
+            evecs.as_mut_slice().copy_from(v.as_slice());
+        },
+        None => ()
+    };
+}
+
+#[cfg(test)]
+mod tests {
+
+    use super::dsaupd;
+    use test::Bencher;
+    use libc::c_double;
+
+    #[test]
+    fn test_dsaupd() {
+        let mut evals: Vec<c_double> = Vec::new();
+        let mut evecs: Vec<c_double> = Vec::new();
+        dsaupd(8, 2, |slice: &[c_double]| {
+            // FIXME: this is probably more involved than necessary
+            slice.to_vec().move_iter().map(|i| 2.0 * i).collect()
+        }, &mut evals, Some(&mut evecs));
+    }
+
+    #[bench]
+    fn benchmark_dsaupd(b: &mut Bencher) {
+        b.iter(|| test_dsaupd());
+    }
 
 }
