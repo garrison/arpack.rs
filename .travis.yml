@@ -2,11 +2,10 @@ env:
   global:
     - secure: Dnk1a6H/paRtVJZTH8kncNNSD/Htv9dUVoKQyPZEkPNeWq1M6pZy0Bl4UTRXlem3aFPqqyReY/2VTsulfmVormjHuVFF9LdlZ6k8BNikRIBFNe8EqR9v6cAN6KKML/cKSDDzhajea1JXvTU8/pRz/Y4BFhNeBjoUbnppUSkcFVk=
 before_install:
-  - sudo add-apt-repository --yes ppa:hansjorg/rust
-  - sudo add-apt-repository --yes ppa:cmrx64/cargo
   - sudo apt-get update -qq
 install:
-  - sudo apt-get install -qq rust-nightly cargo libarpack2-dev
+  - sudo apt-get install -qq libarpack2-dev
+  - curl http://www.rust-lang.org/rustup.sh | sudo sh -
 script:
   - cargo build
   - cargo test
