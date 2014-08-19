@@ -170,7 +170,7 @@ fn dsaupd(n: c_int,
         };
         let out_slice = workd.mut_slice((ipntr[1] - 1) as uint,
                                         (ipntr[1] - 1 + n) as uint);
-        out_slice.copy_from(output.as_slice());
+        out_slice.clone_from_slice(output.as_slice());
     }
 
     if info < 0 {
@@ -206,7 +206,7 @@ fn dsaupd(n: c_int,
             // copy the vector.  fixme: seems overkill.
             evecs.clear();
             evecs.grow((nev * n) as uint, &0.0);
-            evecs.as_mut_slice().copy_from(v.as_slice());
+            evecs.as_mut_slice().clone_from_slice(v.as_slice());
         },
         None => ()
     };
