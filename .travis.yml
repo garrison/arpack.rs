@@ -1,3 +1,6 @@
+env:
+  global:
+    - secure: Dnk1a6H/paRtVJZTH8kncNNSD/Htv9dUVoKQyPZEkPNeWq1M6pZy0Bl4UTRXlem3aFPqqyReY/2VTsulfmVormjHuVFF9LdlZ6k8BNikRIBFNe8EqR9v6cAN6KKML/cKSDDzhajea1JXvTU8/pRz/Y4BFhNeBjoUbnppUSkcFVk=
 before_install:
   - sudo add-apt-repository --yes ppa:hansjorg/rust
   - sudo add-apt-repository --yes ppa:cmrx64/cargo
@@ -5,4 +8,8 @@ before_install:
 install:
   - sudo apt-get install -qq rust-nightly cargo libarpack2-dev
 script:
+  - cargo build
   - cargo test
+  - cargo doc
+after_script:
+  - curl http://www.rust-ci.org/artifacts/put?t=$RUSTCI_TOKEN | sh

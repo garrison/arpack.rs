@@ -1,9 +1,15 @@
+// Copyright 2014 James R. Garrison
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+
 extern crate libc;
 extern crate num;
-extern crate test;
 
-use libc::{c_char, c_double, c_float, c_int};
-use num::complex::Complex;
+use self::libc::{c_char, c_double, c_float, c_int};
 
 #[link(name = "arpack")]
 extern {
@@ -92,135 +98,23 @@ extern {
                lworkl: *const c_int,
                ierr: *mut c_int);
 
-    // single precision non-symmetric
-
-    // fixme: fn snaupd_();
-    // fixme: fn sneupd_();
-
-    // double precision non-symmetric
-
-    // fixme: fn dnaupd_();
-    // fixme: fn dneupd_();
-
-    // single precision complex
-
-    fn cnaupd_(ido: *mut c_int,
-               bmat: *const c_char,
-               n: *const c_int,
-               which: *const c_char,
-               nev: *const c_int,
-               tol: *const c_float,
-               resid: *mut Complex<c_float>,
-               ncv: *const c_int,
-               v: *mut Complex<c_float>,
-               ldv: *const c_int,
-               iparam: *mut c_int,
-               ipntr: *mut c_int,
-               workd: *mut Complex<c_float>,
-               workl: *mut Complex<c_float>,
-               lworkl: *const c_int,
-               rwork: *mut c_float,
-               info: *mut c_int);
-
-    fn cneupd_(rvec: *const c_int,
-               howmny: *const c_char,
-               select: *mut c_int,
-               d: *mut Complex<c_float>,
-               v: *mut Complex<c_float>,
-               ldv: *const c_int,
-               sigma: *const c_float,
-               workev: *mut Complex<c_float>,
-               bmat: *const c_char,
-               n: *const c_int,
-               which: *const c_char,
-               nev: *const c_int,
-               tol: *const c_float,
-               resid: *mut Complex<c_float>,
-               ncv: *const c_int,
-               v: *mut Complex<c_float>,
-               ldv: *const c_int,
-               iparam: *mut c_int,
-               ipntr: *mut c_int,
-               workd: *mut Complex<c_float>,
-               workl: *mut Complex<c_float>,
-               lworkl: *const c_int,
-               rwork: *mut c_float,
-               ierr: *mut c_int);
-
-    // double precision complex
-
-    fn znaupd_(ido: *mut c_int,
-               bmat: *const c_char,
-               n: *const c_int,
-               which: *const c_char,
-               nev: *const c_int,
-               tol: *const c_double,
-               resid: *mut Complex<c_double>,
-               ncv: *const c_int,
-               v: *mut Complex<c_double>,
-               ldv: *const c_int,
-               iparam: *mut c_int,
-               ipntr: *mut c_int,
-               workd: *mut Complex<c_double>,
-               workl: *mut Complex<c_double>,
-               lworkl: *const c_int,
-               rwork: *mut c_double,
-               info: *mut c_int);
-
-    fn zneupd_(rvec: *const c_int,
-               howmny: *const c_char,
-               select: *mut c_int,
-               d: *mut Complex<c_double>,
-               v: *mut Complex<c_double>,
-               ldv: *const c_int,
-               sigma: *const c_double,
-               workev: *mut Complex<c_double>,
-               bmat: *const c_char,
-               n: *const c_int,
-               which: *const c_char,
-               nev: *const c_int,
-               tol: *const c_double,
-               resid: *mut Complex<c_double>,
-               ncv: *const c_int,
-               v: *mut Complex<c_double>,
-               ldv: *const c_int,
-               iparam: *mut c_int,
-               ipntr: *mut c_int,
-               workd: *mut Complex<c_double>,
-               workl: *mut Complex<c_double>,
-               lworkl: *const c_int,
-               rwork: *mut c_double,
-               ierr: *mut c_int);
-
 }
 
-enum Which {
-    LM,
-    SM,
-    LA,
-    SA,
-    BE,
+pub enum Which {
+    LargestMagnitude,
+    SmallestMagnitude,
+    LargestAlgebraic,
+    SmallestAlgebraic,
+    BothEnds,
 }
 
-enum BMat {
-    I,
-    G,
-}
-
-fn which_func(which: Which) -> &'static str {
+fn which_to_str(which: Which) -> &'static str {
     match which {
-        LM => "LM",
-        SM => "SM",
-        LA => "LA",
-        SA => "SA",
-        BE => "BE",
-    }
-}
-
-fn bmat_func(bmat: BMat) -> &'static str {
-    match bmat {
-        I => "I",
-        G => "G",
+        LargestMagnitude => "LM",
+        SmallestMagnitude => "SM",
+        LargestAlgebraic => "LA",
+        SmallestAlgebraic => "SA",
+        BothEnds => "BE",
     }
 }
 
@@ -234,8 +128,8 @@ fn dsaupd(n: c_int,
     assert!(nev < n);
 
     let mut ido: c_int = 0;
-    let bmat = bmat_func(I).to_c_str();
-    let which = which_func(SA).to_c_str();
+    let bmat = "I".to_c_str(); // not configurable, for now
+    let which = which_to_str(SmallestAlgebraic).to_c_str();
     let tol: c_double = 0.0;
     let mut resid = Vec::from_elem(n as uint, 0.0 as c_double);
     let ncv = {
@@ -321,9 +215,12 @@ fn dsaupd(n: c_int,
 #[cfg(test)]
 mod tests {
 
+    extern crate libc;
+    extern crate test;
+
     use super::dsaupd;
-    use test::Bencher;
-    use libc::c_double;
+    use self::test::Bencher;
+    use self::libc::c_double;
 
     #[test]
     fn test_dsaupd() {

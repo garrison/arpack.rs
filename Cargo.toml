@@ -7,3 +7,4 @@ authors = ["Jim Garrison <jim@garrison.cc>"]
 [[lib]]
 
 name = "arpack"
+path = "src/lib.rs"
