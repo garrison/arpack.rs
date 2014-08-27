@@ -1,7 +1,7 @@
-language: rust
 env:
   global:
     - secure: Dnk1a6H/paRtVJZTH8kncNNSD/Htv9dUVoKQyPZEkPNeWq1M6pZy0Bl4UTRXlem3aFPqqyReY/2VTsulfmVormjHuVFF9LdlZ6k8BNikRIBFNe8EqR9v6cAN6KKML/cKSDDzhajea1JXvTU8/pRz/Y4BFhNeBjoUbnppUSkcFVk=
+language: rust
 before_install:
   - sudo apt-get update -qq
 install:
