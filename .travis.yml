@@ -1,6 +1,6 @@
 env:
   global:
-    - secure: Dnk1a6H/paRtVJZTH8kncNNSD/Htv9dUVoKQyPZEkPNeWq1M6pZy0Bl4UTRXlem3aFPqqyReY/2VTsulfmVormjHuVFF9LdlZ6k8BNikRIBFNe8EqR9v6cAN6KKML/cKSDDzhajea1JXvTU8/pRz/Y4BFhNeBjoUbnppUSkcFVk=
+    - secure: eekSPkcDT6vC31bcboqcdM5csWX+cMqTsyNHBxK/uTwmJgeJUXyKZlA+LnSmxZED1R5pwWuh44tuHdSw/9rA/sTPKZyFp/utnKTeCekuHdFhCibjaRqwWDnkvx7JWU++I/02UY08Pwo87J/BAOjv2fO9q5+V4Z/BzrDLxehm+FE=
 language: rust
 before_install:
   - sudo apt-get update -qq
