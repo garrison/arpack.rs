@@ -184,7 +184,7 @@ fn dsaupd(n: c_int,
     };
     let mut select = Vec::from_elem(ncv as uint, 0 as c_int);
     evals.clear(); // called ``d`` in arpack
-    evals.grow(nev as uint, &0.0);
+    evals.grow(nev as uint, 0.0);
     let sigma: c_double = 0.0;
     let mut ierr: c_int = 0;
 
@@ -205,7 +205,7 @@ fn dsaupd(n: c_int,
         Some(evecs) => {
             // copy the vector.  fixme: seems overkill.
             evecs.clear();
-            evecs.grow((nev * n) as uint, &0.0);
+            evecs.grow((nev * n) as uint, 0.0);
             evecs.as_mut_slice().clone_from_slice(v.as_slice());
         },
         None => ()
