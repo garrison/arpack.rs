@@ -2,6 +2,10 @@ env:
   global:
     - secure: eekSPkcDT6vC31bcboqcdM5csWX+cMqTsyNHBxK/uTwmJgeJUXyKZlA+LnSmxZED1R5pwWuh44tuHdSw/9rA/sTPKZyFp/utnKTeCekuHdFhCibjaRqwWDnkvx7JWU++I/02UY08Pwo87J/BAOjv2fO9q5+V4Z/BzrDLxehm+FE=
 language: rust
+notifications:
+  email:
+    on_success: change
+    on_failure: change
 before_install:
   - sudo apt-get update -qq
 install:
