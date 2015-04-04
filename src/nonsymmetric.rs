@@ -129,11 +129,11 @@ pub enum Which {
 
 fn which_to_str(which: Which) -> &'static str {
     match which {
-        LargestMagnitude => "LM",
-        SmallestMagnitude => "SM",
-        LargestRealPart => "LR",
-        SmallestRealPart => "SR",
-        LargestImaginaryPart => "LI",
-        SmallestImaginaryPart => "SI",
+        Which::LargestMagnitude => "LM",
+        Which::SmallestMagnitude => "SM",
+        Which::LargestRealPart => "LR",
+        Which::SmallestRealPart => "SR",
+        Which::LargestImaginaryPart => "LI",
+        Which::SmallestImaginaryPart => "SI",
     }
 }

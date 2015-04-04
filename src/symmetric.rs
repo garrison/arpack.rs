@@ -9,7 +9,8 @@
 extern crate libc;
 extern crate num;
 
-use self::libc::{c_char, c_double, c_float, c_int};
+use self::libc::{c_char, c_double, c_float, c_int, c_uint};
+use std::ffi::CString;
 
 #[link(name = "arpack")]
 extern {
@@ -110,28 +111,29 @@ pub enum Which {
 
 fn which_to_str(which: Which) -> &'static str {
     match which {
-        LargestMagnitude => "LM",
-        SmallestMagnitude => "SM",
-        LargestAlgebraic => "LA",
-        SmallestAlgebraic => "SA",
-        BothEnds => "BE",
+        Which::LargestMagnitude => "LM",
+        Which::SmallestMagnitude => "SM",
+        Which::LargestAlgebraic => "LA",
+        Which::SmallestAlgebraic => "SA",
+        Which::BothEnds => "BE",
     }
 }
 
 // note: evals may potentially be modified even if there is an error.
-fn dsaupd(n: c_int,
-          nev: c_int,
-          mv_multiply: |slice: &[c_double]| -> Vec<c_double>,
-          evals: &mut Vec<c_double>,
-          evecs: Option<&mut Vec<c_double>>) {
+fn dsaupd<F>(n: c_int,
+             nev: c_int,
+             mv_multiply: F,
+             evals: &mut Vec<c_double>,
+             evecs: Option<&mut Vec<c_double>>)
+        where F : Fn(&[c_double]) -> Vec<c_double> {
     assert!(nev > 0);
     assert!(nev < n);
 
     let mut ido: c_int = 0;
-    let bmat = "I".to_c_str(); // not configurable, for now
-    let which = which_to_str(SmallestAlgebraic).to_c_str();
+    let bmat = CString::new("I").unwrap(); // not configurable, for now
+    let which = CString::new(which_to_str(Which::SmallestAlgebraic)).unwrap();
     let tol: c_double = 0.0;
-    let mut resid = Vec::from_elem(n as uint, 0.0 as c_double);
+    let mut resid = vec![0.0 as c_double; n as usize];
     let ncv = {
         let possible_ncv: c_int = 4 * nev;
         if possible_ncv > n {
@@ -141,13 +143,13 @@ fn dsaupd(n: c_int,
         }
     };
     let ldv: c_int = n;
-    let mut v = Vec::from_elem((ldv * ncv) as uint, 0.0 as c_double);
+    let mut v = vec![0.0 as c_double; (ldv * ncv) as usize];
     let mut iparam = vec![1 as c_int, 0, 3 * n, 0, 0, 0, 1, 0, 0, 0, 0];
     // fixme: may wish to tune iparam[2] differently.
-    let mut ipntr = Vec::from_elem(11, 0 as c_int);
-    let mut workd = Vec::from_elem(3 * n as uint, 0.0 as c_double);
+    let mut ipntr = vec![0 as c_int; 11];
+    let mut workd = vec![0.0 as c_double; 3 * n as usize];
     let lworkl: c_int = ncv * (ncv + 8);
-    let mut workl = Vec::from_elem(lworkl as uint, 0.0 as c_double);
+    let mut workl = vec![0.0 as c_double; lworkl as usize];
     let mut info: c_int = 0;
 
     loop {
@@ -164,12 +166,12 @@ fn dsaupd(n: c_int,
 
         // fixme: seems overkill
         let output = {
-            let in_slice = workd.slice((ipntr[0] - 1) as uint,
-                                       (ipntr[0] - 1 + n) as uint);
+            let in_slice = workd.slice((ipntr[0] - 1) as c_uint,
+                                       (ipntr[0] - 1 + n) as c_uint);
             mv_multiply(in_slice)
         };
-        let out_slice = workd.mut_slice((ipntr[1] - 1) as uint,
-                                        (ipntr[1] - 1 + n) as uint);
+        let out_slice = workd.mut_slice((ipntr[1] - 1) as c_uint,
+                                        (ipntr[1] - 1 + n) as c_uint);
         out_slice.clone_from_slice(output.as_slice());
     }
 
@@ -182,13 +184,13 @@ fn dsaupd(n: c_int,
         Some(ref evecs) => 1,
         None => 0
     };
-    let mut select = Vec::from_elem(ncv as uint, 0 as c_int);
+    let mut select = vec![0 as c_int; ncv as usize];
     evals.clear(); // called ``d`` in arpack
-    evals.grow(nev as uint, 0.0);
+    evals.resize(nev as usize, 0.0);
     let sigma: c_double = 0.0;
     let mut ierr: c_int = 0;
 
-    let howmny = "A".to_c_str();
+    let howmny = CString::new("A").unwrap();
     unsafe {
         dseupd_(&rvec, howmny.as_ptr(), select.as_mut_ptr(), evals.as_mut_ptr(),
                 v.as_mut_ptr(), &ldv, &sigma, bmat.as_ptr(),
@@ -205,7 +207,7 @@ fn dsaupd(n: c_int,
         Some(evecs) => {
             // copy the vector.  fixme: seems overkill.
             evecs.clear();
-            evecs.grow((nev * n) as uint, 0.0);
+            evecs.resize((nev * n) as usize, 0.0);
             evecs.as_mut_slice().clone_from_slice(v.as_slice());
         },
         None => ()

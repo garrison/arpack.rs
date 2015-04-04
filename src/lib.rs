@@ -10,10 +10,15 @@
 //!
 
 #![crate_name = "arpack"]
-#![experimental]
-#![license = "MIT/ASL2"]
+#![unstable]
+//#![license = "MIT/ASL2"]
 #![crate_type = "rlib"]
 #![crate_type = "dylib"]
+
+#![feature(libc)]
+#![feature(collections)]
+#![feature(convert)]
+#![feature(test)]
 
 pub mod symmetric;
 pub mod nonsymmetric;
