@@ -166,12 +166,10 @@ fn dsaupd<F>(n: c_int,
 
         // fixme: seems overkill
         let output = {
-            let in_slice = workd.slice((ipntr[0] - 1) as c_uint,
-                                       (ipntr[0] - 1 + n) as c_uint);
+            let in_slice = &workd[((ipntr[0] - 1) as usize)..((ipntr[0] - 1 + n) as usize)];
             mv_multiply(in_slice)
         };
-        let out_slice = workd.mut_slice((ipntr[1] - 1) as c_uint,
-                                        (ipntr[1] - 1 + n) as c_uint);
+        let out_slice = &mut workd[((ipntr[1] - 1) as usize)..((ipntr[1] - 1 + n) as usize)];
         out_slice.clone_from_slice(output.as_slice());
     }
 
