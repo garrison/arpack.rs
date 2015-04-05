@@ -9,7 +9,7 @@
 extern crate libc;
 extern crate num;
 
-use self::libc::{c_char, c_double, c_float, c_int, c_uint};
+use self::libc::{c_char, c_double, c_float, c_int};
 use std::ffi::CString;
 
 #[link(name = "arpack")]
