@@ -8,7 +8,6 @@
 
 extern crate libc;
 extern crate num;
-extern crate test;
 
 use self::libc::{c_char, c_double, c_float, c_int};
 use self::num::complex::Complex;

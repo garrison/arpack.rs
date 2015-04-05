@@ -216,7 +216,6 @@ fn dsaupd<F>(n: c_int,
 mod tests {
 
     extern crate libc;
-    extern crate test;
 
     use super::dsaupd;
     use self::test::Bencher;
