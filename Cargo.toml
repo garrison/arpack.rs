@@ -9,6 +9,7 @@ authors = ["Jim Garrison <jim@garrison.cc>"]
 name = "arpack"
 path = "src/lib.rs"
 
-[dependencies.num]
+[dependencies]
 
-git = "https://github.com/rust-lang/num.git"
+num = "*"
+libc = "*"
