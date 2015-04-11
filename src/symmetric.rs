@@ -170,7 +170,7 @@ fn dsaupd<F>(n: c_int,
             mv_multiply(in_slice)
         };
         let out_slice = &mut workd[((ipntr[1] - 1) as usize)..((ipntr[1] - 1 + n) as usize)];
-        out_slice.clone_from_slice(output.as_slice());
+        out_slice.clone_from_slice(&output[..]);
     }
 
     if info < 0 {
@@ -206,7 +206,7 @@ fn dsaupd<F>(n: c_int,
             // copy the vector.  fixme: seems overkill.
             evecs.clear();
             evecs.resize((nev * n) as usize, 0.0);
-            evecs.as_mut_slice().clone_from_slice(v.as_slice());
+            (&mut evecs[..]).clone_from_slice(&v[..]);
         },
         None => ()
     };
