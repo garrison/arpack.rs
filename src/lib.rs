@@ -15,5 +15,7 @@
 #![crate_type = "rlib"]
 #![crate_type = "dylib"]
 
+#![feature(collections)]
+
 pub mod symmetric;
 pub mod nonsymmetric;
