@@ -213,9 +213,10 @@ fn dsaupd<F>(n: c_int,
 }
 
 #[cfg(test)]
-mod tests {
+mod test {
 
     extern crate libc;
+    extern crate test;
 
     use super::dsaupd;
     use self::test::Bencher;
@@ -227,7 +228,7 @@ mod tests {
         let mut evecs: Vec<c_double> = Vec::new();
         dsaupd(8, 2, |slice: &[c_double]| {
             // FIXME: this is probably more involved than necessary
-            slice.to_vec().move_iter().map(|i| 2.0 * i).collect()
+            slice.to_vec().into_iter().map(|i| 2.0 * i).collect()
         }, &mut evals, Some(&mut evecs));
     }
 
