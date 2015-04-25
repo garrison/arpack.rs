@@ -10,7 +10,7 @@
 //!
 
 #![crate_name = "arpack"]
-#![unstable]
+//#![unstable]
 //#![license = "MIT/ASL2"]
 #![crate_type = "rlib"]
 #![crate_type = "dylib"]
